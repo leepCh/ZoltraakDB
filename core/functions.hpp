@@ -8,5 +8,7 @@ class functions{
      static std::string set(const ZoltraakKey& key,const ZoltraakValue& value,int ttl);
      static ZoltraakValue get(const ZoltraakKey& key,int &type);
      static int ttl(const ZoltraakKey& key);
+     static int delete_key(const ZoltraakKey& key);
+     static int expire(const ZoltraakKey& key,int exp_time);
 
 };

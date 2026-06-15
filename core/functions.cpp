@@ -64,6 +64,28 @@ ZoltraakValue functions::get(const ZoltraakKey& key,int &type){
     return val;
 }
 
+int functions::expire(const ZoltraakKey& key,int exp_time){
+    if(db.find(key)==db.end()){
+        return 0;
+    }
+
+    db[key].expires_at=std::chrono::steady_clock::now() + std::chrono::seconds(exp_time);
+    db[key].has_ttl=true;
+
+    return 1;
+
+}
+
+int functions::delete_key(const ZoltraakKey& key){
+    if(db.find(key)==db.end()){
+        return 0;
+    }
+
+    db.erase(key);
+    return 1;
+
+}
+
 int functions::ttl(const ZoltraakKey& key){
     auto it = db.find(key);
 

@@ -195,6 +195,52 @@ std::string RequestEvaluator::evalArray(const RespData &arr)
             int remaining_ttl = functions::ttl(key);
             return Encoder::integerEncode(remaining_ttl);
         }
+        else if(cmd=="delete"){
+            if(arrayData.size()<2){
+                return std::string("-Error:Incorrect no of arguements for delete");
+            }
+            int noofdeleted=0;
+
+            for(int i=1;i<arrayData.size();i++){
+                if(!std::holds_alternative<std::string>(arrayData.at(i).data)){
+
+                    return std::string("-Error:Not a valid key type ")+std::to_string(noofdeleted)+std::string("keys deleted\r\n");
+                }
+
+                std::string key = std::get<std::string>(arrayData.at(i).data);
+
+                noofdeleted+=functions::delete_key(key);
+
+            }
+
+            return Encoder::integerEncode(noofdeleted);
+        }
+        else if(cmd=="expire"){
+            if(arrayData.size()!=3){
+                return std::string("-Error:Incorrect no of arguements for expire");
+            }
+
+             if(!std::holds_alternative<std::string>(arrayData.at(1).data)){
+
+                    return std::string("-Error:Not a valid key type\r\n");
+                }
+
+                std::string key = std::get<std::string>(arrayData.at(1).data);
+
+
+                try
+                        {
+                            int expireTime = std::stoi(std::get<std::string>(arrayData.at(2).data));
+                            int a = functions::expire(key,expireTime);
+                            return Encoder::integerEncode(a);
+                        }
+                        catch (...)
+                        {
+                            return std::string("-Error:value is not an integer or out of range\r\n");
+                        }
+
+
+        }
         else
         {
             return std::string("-Error:Not a valid function\r\n");
