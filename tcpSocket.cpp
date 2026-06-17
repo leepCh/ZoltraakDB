@@ -7,6 +7,8 @@
 #include "./RESPParser/RespParser.hpp"
 #include "./core/evalreq.hpp"
 #include <sys/epoll.h>
+#include <unordered_map>
+#include "core/Db.hpp"
 
 using namespace std;
 
@@ -100,7 +102,7 @@ int main()
 
        
 
-        eventCount = epoll_wait(epoll_fd, clientEvents, MAX_CONNS, 300000);
+        eventCount = epoll_wait(epoll_fd, clientEvents, MAX_CONNS, 1000);
 
         for (int i = 0; i < eventCount; i++)
         {
@@ -122,7 +124,7 @@ int main()
                     continue;
                 }
 
-                 cout << "\n[Server] Client connected!" << endl;
+                //  cout << "\n[Server] Client connected!" << endl;
             }
             else  
             {
@@ -143,10 +145,10 @@ int main()
 
                     epoll_ctl(epoll_fd,EPOLL_CTL_DEL,clientFD,NULL);
                     close(clientFD);
-                    cout << "[Server] Client disconnected." << endl;
+                    // cout << "[Server] Client disconnected." << endl;
                     continue;
                 }
-                cout << "Read " << bytesread << " from client " << clientFD << endl;
+                // cout << "Read " << bytesread << " from client " << clientFD << endl;
 
                 buffer[bytesread] = '\0';
 
@@ -174,6 +176,21 @@ int main()
 
                 memset(buffer, 0, BUFFER_SIZE + 1);
             }
+
+            auto timethen = std::chrono::steady_clock::now();
+
+            ZoltraakDB& zdb = ZoltraakDB::getInstance();
+
+            while(zdb.activeExpireCycle()){
+                auto timeElapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-timethen);
+                if(timeElapsed.count()>=1){
+                    break;
+                }
+            }
+
+            
+
+            
         }
 
       
