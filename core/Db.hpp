@@ -77,13 +77,14 @@ public:
         size_t expired_count = 0;
         auto now = std::chrono::steady_clock::now();
 
-        static std::random_device rd;
-        static std::mt19937 gen(rd());
+        // static std::random_device rd;
+        // static std::mt19937 gen(rd());
 
-        for (size_t i = 0; i < sample_size && !keys_with_ttl.empty(); ++i) {
+        for (int i = 0; i < sample_size && !keys_with_ttl.empty(); ++i) {
             checked_count++;
-            std::uniform_int_distribution<size_t> dis(0, keys_with_ttl.size() - 1);
-            size_t random_idx = dis(gen);
+             printf("about to run active expiry\n");
+            // std::uniform_int_distribution<size_t> dis(0, keys_with_ttl.size() - 1);
+            size_t random_idx = rand() % keys_with_ttl.size();
             std::string target_key = keys_with_ttl[random_idx];
 
             auto it = db.find(target_key);
@@ -99,6 +100,8 @@ public:
                 keys_with_ttl[random_idx]=keys_with_ttl.back();
                 keys_with_ttl.pop_back();
             }
+
+           
         }
 
         return expired_count > 0 && expired_count >= std::max(size_t(1), checked_count / 4);

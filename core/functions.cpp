@@ -37,7 +37,7 @@ std::string functions::set(const ZoltraakKey& key,const ZoltraakValue& value,int
 
 }
 
-ZoltraakValue functions::get(const ZoltraakKey& key,int &type){
+ZoltraakValue functions::get(const ZoltraakKey& key){
 
     ZoltraakDB& zdb = ZoltraakDB::getInstance();
 
@@ -103,6 +103,37 @@ int functions::ttl(const ZoltraakKey& key){
 
     auto remaining = std::chrono::duration_cast<std::chrono::seconds>(it->expires_at - now);
     return remaining.count();
+}
+
+int functions::changeVal(const ZoltraakKey& key, int value){
+     
+    ZoltraakDB& zdb = ZoltraakDB::getInstance();
+
+    ZoltraakObject *obj = zdb.fetch(key);
+
+    if(obj==nullptr){
+        ZoltraakObject obj;
+        obj.has_ttl=false;
+        obj.value= std::to_string(value);
+        zdb.put(key,obj);
+        return 1;
+    }
+
+    try{
+        int a = std::stoi(std::get<std::string>(obj->value));
+        a+=value;
+        std::string finalVal = std::to_string(a);
+        obj->value=finalVal;
+    }
+    catch(...){
+
+        return -1;
+
+    }
+
+    return 11;
+    
+
 }
 
 

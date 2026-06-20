@@ -181,9 +181,13 @@ int main()
 
             ZoltraakDB& zdb = ZoltraakDB::getInstance();
 
+            int iterations=0;
+
             while(zdb.activeExpireCycle()){
+                iterations++;
                 auto timeElapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-timethen);
                 if(timeElapsed.count()>=1){
+                    printf("[WARN] Cleanup took %ld ms over %d iterations!\n", timeElapsed.count(), iterations);
                     break;
                 }
             }

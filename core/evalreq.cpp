@@ -60,7 +60,7 @@ std::string RequestEvaluator::evalArray(const RespData &arr)
         }
         else if (cmd == "set")
         {
-            if (arrayData.size() < 3 || arrayData.size() > 5)
+            if (arrayData.size() < 3 || arrayData.size() > 5||arrayData.size()==4)
             { // SET needs at least: cmd, key, value
                 return std::string("-Error:Incorrect number of arguments for set\r\n");
             }
@@ -152,7 +152,7 @@ std::string RequestEvaluator::evalArray(const RespData &arr)
             ZoltraakKey key = std::get<std::string>(arrayData.at(1).data);
             int type = 0;
 
-            ZoltraakValue value = functions::get(key, type);
+            ZoltraakValue value = functions::get(key);
 
             if (std::holds_alternative<std::string>(value))
             {
@@ -169,13 +169,6 @@ std::string RequestEvaluator::evalArray(const RespData &arr)
                 int value_int = std::get<int>(value);
 
                 return Encoder::integerEncode(value_int);
-            }
-            // vector
-            else if (std::holds_alternative<std::vector<std::string>>(value))
-            {
-                std::vector<std::string> value_arr = std::get<std::vector<std::string>>(value);
-
-                return Encoder::arrayencode(value_arr);
             }
 
             return std::string("-Error:Invalid value type\r\n");
@@ -239,6 +232,44 @@ std::string RequestEvaluator::evalArray(const RespData &arr)
                             return std::string("-Error:value is not an integer or out of range\r\n");
                         }
 
+
+        }
+        else if(cmd=="incr"||cmd=="decr"||cmd=="incrby"||cmd=="decrby"){
+            int val;
+            if((cmd=="incr"||cmd=="decr")){
+                if(arrayData.size()!=2)
+                return std::string("-Error:Incorrect number of arguements for "+cmd+"\r\n");
+
+                val=cmd=="incr"?1:-1;
+
+            }
+            else {
+
+                if(arrayData.size()!=3)
+                return std::string("-Error:Incorrect number of arguements for "+cmd+"\r\n");
+
+            try
+            {
+                val = std::stoi(std::get<std::string>(arrayData.at(2).data));
+            }
+            catch (...)
+            {
+            return std::string("-Error:value is not an integer or out of range\r\n");
+            }
+
+            val=cmd=="incrby"?val:-val;
+
+            }
+
+            ZoltraakKey key = std::get<std::string>(arrayData.at(1).data);
+
+            int ret = functions::changeVal(key,val);
+
+            if(ret==-1){
+                return std::string("-Error:value of object of the given key not an integer or out of range\r\n");
+            }
+
+            return Encoder::integerEncode(ret);
 
         }
         else
