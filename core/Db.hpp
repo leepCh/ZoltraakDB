@@ -6,6 +6,13 @@
 #include <algorithm>
 #include <chrono>
 #include <vector>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <format>
+#include <iomanip>
+#include <filesystem>
+#include <fstream>
 
 class ZoltraakDB {
 private:
@@ -107,6 +114,64 @@ public:
         return expired_count > 0 && expired_count >= std::max(size_t(1), checked_count / 4);
     }
 
+    int exportToCSV(const std::string& directory_path) {
+
+    pid_t pid = fork();
+
+    if(pid<0){
+        return -1;
+    }
+
+    if(pid==0){
+   
+    std::filesystem::create_directories(directory_path);
+
+    auto now = std::chrono::system_clock::now();
+    auto in_time_t = std::chrono::system_clock::to_time_t(now);
+    
+    std::stringstream ss;
+    
+    ss << std::put_time(std::localtime(&in_time_t), "%Y%m%d_%H%M%S");
+    
+
+    std::string full_path = directory_path + "/snapshot_" + ss.str() + ".csv";
+
+   
+    std::ofstream csvFile(full_path, std::ios::trunc);
+    if (!csvFile.is_open()) return -1;
+
+   
+    csvFile << "Key,Value,Has_TTL\n";
+
+    for (const auto& [key, obj] : db) {
+        if (std::holds_alternative<std::string>(obj.value)) {
+            std::string actual_value = std::get<std::string>(obj.value);
+
+            csvFile << key << "," 
+                    << actual_value << "," 
+                    << obj.has_ttl << "\n";
+        }
+    }
+
+    csvFile.close();
+
+    return 0;
+}
+
+  int status;
+   
+  waitpid(-1, &status, 0);
+
+  if(status==0){
+     return 0;
+  }
+  else{
+    return -1;
+  }
+
+
+
+}
 
 
 

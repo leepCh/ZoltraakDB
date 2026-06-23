@@ -10,11 +10,12 @@
 #include <unordered_map>
 #include "core/Db.hpp"
 
-using namespace std;
+// using namespace std;
+namespace cron = std::chrono;
 
 #define PORT 8080
 #define BUFFER_SIZE 1024
-#define MAX_CONNS 100
+#define MAX_CONNS 1024
 
 int acceptClientConnection(int serverFd)
 {
@@ -55,7 +56,7 @@ int serverSetup()
         exit(1);
     }
 
-    if (listen(server_fd, 3) < 0)
+    if (listen(server_fd, MAX_CONNS) < 0)
     {
         perror("failed to listen");
         exit(1);
@@ -91,9 +92,11 @@ int main()
         exit(1);
     }
 
-    cout << "Server listening on port " << PORT << endl;
+    std::cout << "Server listening on port " << PORT << std::endl;
 
     char buffer[BUFFER_SIZE + 1];
+
+    auto start = cron::steady_clock::now();
 
     int eventCount;
 
@@ -163,7 +166,7 @@ int main()
                 {
                     if (std::holds_alternative<std::string>(result.data))
                     {
-                        cout << "[Parser Error]: " << std::get<std::string>(result.data) << endl;
+                        std::cout << "[Parser Error]: " << std::get<std::string>(result.data) << std::endl;
                     }
                     write(clientFD, "-ERR parsing\r\n", 14);
                 }
@@ -177,25 +180,33 @@ int main()
                 memset(buffer, 0, BUFFER_SIZE + 1);
             }
 
-            auto timethen = std::chrono::steady_clock::now();
+           
+            
+        }  // for loop ended
+
+         auto timeNow = std::chrono::steady_clock::now();
+
+         auto timeElapsed = cron::duration_cast<cron::milliseconds>(timeNow-start).count();
+
 
             ZoltraakDB& zdb = ZoltraakDB::getInstance();
 
             int iterations=0;
 
+            size_t ratio = zdb.size()/MAX_KEYS;
+
+           if(timeElapsed+ratio>100){
+
             while(zdb.activeExpireCycle()){
                 iterations++;
-                auto timeElapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-timethen);
-                if(timeElapsed.count()>=1){
+                auto timeElapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-timeNow);
+                if(timeElapsed.count()>=1+ratio){
                     printf("[WARN] Cleanup took %ld ms over %d iterations!\n", timeElapsed.count(), iterations);
                     break;
                 }
-            }
+            }  }
 
-            
-
-            
-        }
+            start=std::chrono::steady_clock::now();
 
       
     }

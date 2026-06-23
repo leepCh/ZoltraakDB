@@ -136,6 +136,14 @@ int functions::changeVal(const ZoltraakKey& key, int value){
 
 }
 
+int functions::snapshot(const std::string &dir){
+    ZoltraakDB& zdb = ZoltraakDB::getInstance();
+
+    return zdb.exportToCSV(dir);
+}
+
+
+
 
 
 

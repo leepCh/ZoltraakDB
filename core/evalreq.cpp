@@ -272,6 +272,13 @@ std::string RequestEvaluator::evalArray(const RespData &arr)
             return Encoder::integerEncode(ret);
 
         }
+        else if(cmd=="snapshot"){
+
+            const std::string dir = "logs";
+
+            return Encoder::integerEncode(functions::snapshot(dir));
+
+        }
         else
         {
             return std::string("-Error:Not a valid function\r\n");

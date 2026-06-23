@@ -4,6 +4,8 @@
 #include <variant>
 #include <chrono>
 
+#define MAX_KEYS 500000
+
 struct RespResult;
 
 using RespData = std::variant<int, std::string, std::vector<RespResult>>;
